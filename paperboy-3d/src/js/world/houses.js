@@ -62,13 +62,22 @@ export function createHousesBlock(blockGroup, worldData, obstacles, mailboxes, p
     const houseLength = 8;
     const houseSpacing = (blockLength - (houseLength * 4)) / 5;
     
+    // Fixed x-positions for houses to align precisely with the blue guidelines
+    // Further reduced from ±8 to ±6 to match blue guidelines in screenshot
+    const leftHouseX = -(blockWidth / 2) - 6; // Original was -12, moved inward by 6
+    const rightHouseX = (blockWidth / 2) + 6; // Original was +12, moved inward by 6
+    
+    // Shift the entire sequence of houses by moving the starting z-position
+    // Adjusted zOffset from 3 to 4 for better alignment with blue guidelines
+    const zOffset = 4;
+    
     for (let i = 0; i < 4; i++) {
-        const houseZ = houseSpacing + i * (houseLength + houseSpacing);
+        const houseZ = (houseSpacing + zOffset) + i * (houseLength + houseSpacing);
         
         // Left side house
         createHouse(
             blockGroup, 
-            -(blockWidth / 2) - 12,
+            leftHouseX,
             houseZ,
             houseWidth,
             houseLength,
@@ -80,7 +89,7 @@ export function createHousesBlock(blockGroup, worldData, obstacles, mailboxes, p
         // Right side house
         createHouse(
             blockGroup, 
-            (blockWidth / 2) + 12,
+            rightHouseX,
             houseZ,
             houseWidth,
             houseLength,

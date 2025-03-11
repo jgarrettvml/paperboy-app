@@ -14,7 +14,7 @@ export class Player {
         this.depth = 1.5;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
-        this.speed = 0.10;
+        this.speed = 0.15;
         this.canJump = true;
         this.isJumping = false;
         this.jumpSpeed = 0.2;
@@ -117,13 +117,30 @@ export class Player {
         // Handle jumping
         if (this.isJumping) {
             this.position.y += this.velocity.y;
-            this.velocity.y -= 0.01;
+            this.velocity.y -= 0.015; // Gravity
+            
+            // Add some rotation to the bike wheels during jump for animation
+            this.object.children.forEach(child => {
+                if (child.geometry && child.geometry.type === 'TorusGeometry') {
+                    child.rotation.x += 0.2; // Rotate wheels
+                }
+            });
             
             if (this.position.y <= this.playerHeight) {
                 this.position.y = this.playerHeight;
                 this.isJumping = false;
                 this.velocity.y = 0;
                 this.canJump = true;
+                
+                // Reset the tilt when landing
+                this.object.rotation.z = 0;
+            }
+        } else {
+            // Gradually reset the rotation if not jumping
+            if (Math.abs(this.object.rotation.z) > 0.01) {
+                this.object.rotation.z *= 0.9;
+            } else {
+                this.object.rotation.z = 0;
             }
         }
         
@@ -162,8 +179,13 @@ export class Player {
     startJump() {
         if (!this.isJumping) {
             this.isJumping = true;
-            this.velocity.y = this.jumpSpeed;
+            // Higher jump velocity for more dramatic hill jumps
+            this.velocity.y = this.jumpSpeed * 1.5;
             this.canJump = false;
+            
+            // Play jump animation - add some bike tilt based on velocity
+            const tiltAngle = this.velocity.x * 0.5;
+            this.object.rotation.z = tiltAngle;
         }
     }
     

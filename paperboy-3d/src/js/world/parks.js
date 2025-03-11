@@ -45,24 +45,28 @@ export function createPark(blockGroup, worldData, obstacles) {
         blockGroup.add(grassPatch);
     }
     
-    // Create street/path through the park
-    const street = new THREE.Mesh(
+    // Create street/path through the park - changed to grass color
+    const pathBase = new THREE.Mesh(
         new THREE.PlaneGeometry(blockWidth, blockLength),
-        new THREE.MeshLambertMaterial({ color: 0xbbbbbb }) // Lighter color for park path
+        new THREE.MeshLambertMaterial({ color: 0x228822 }) // Light green for the path area
     );
-    street.rotation.x = -Math.PI / 2;
-    street.position.set(0, 0.05, blockLength / 2);
-    street.receiveShadow = true;
-    blockGroup.add(street);
+    pathBase.rotation.x = -Math.PI / 2;
+    pathBase.position.set(0, 0.04, blockLength / 2);
+    pathBase.receiveShadow = true;
+    blockGroup.add(pathBase);
     
-    // Add path texture - crossing lines
+    // Add path texture - crossing lines with subtler colors
     for (let i = 0; i < blockLength / 2; i++) {
         const pathLine = new THREE.Mesh(
             new THREE.PlaneGeometry(blockWidth, 0.1),
-            new THREE.MeshLambertMaterial({ color: 0x999999 })
+            new THREE.MeshLambertMaterial({ 
+                color: 0x228822,  // Slightly darker green for path lines
+                transparent: true,
+                opacity: 0.7
+            })
         );
         pathLine.rotation.x = -Math.PI / 2;
-        pathLine.position.set(0, 0.06, i * 2);
+        pathLine.position.set(0, 0.05, i * 2);
         blockGroup.add(pathLine);
     }
     
@@ -112,7 +116,7 @@ export function createPark(blockGroup, worldData, obstacles) {
 }
 
 /**
- * Create an improved hill
+ * Create an improved hill with half-sphere shape
  * @param {THREE.Group} blockGroup - Block group to add hill to
  * @param {number} x - X position
  * @param {number} z - Z position
@@ -122,21 +126,21 @@ function createHill(blockGroup, x, z, obstacles) {
     const hillWidth = 10;
     const hillHeight = 2;
     
-    // Random hill size variation
-    const sizeVariation = 0.7 + Math.random() * 0.6;
+    // Random hill size variation (reduced by 50%)
+    const sizeVariation = 0.25 + Math.random() * 0.3; // Reduced variation
     const actualWidth = hillWidth * sizeVariation;
     const actualHeight = hillHeight * sizeVariation;
     
-    // Create hill geometry
-    const hillGeometry = new THREE.CylinderGeometry(
-        0, 
-        actualWidth / 2, 
-        actualHeight, 
-        16, 
-        1, 
-        false
+    // Create hill geometry using half-sphere for more realistic shape
+    const hillGeometry = new THREE.SphereGeometry(
+        actualWidth / 2,  // radius
+        16,               // widthSegments
+        16,               // heightSegments
+        0,                // phiStart
+        Math.PI * 2,      // phiLength
+        0,                // thetaStart
+        Math.PI / 2       // thetaLength (half sphere)
     );
-    hillGeometry.rotateX(Math.PI / 2);
     
     // Hill color variation
     const hillColor = Math.random() > 0.5 ? 0x228822 : 0x2A9D2A;
@@ -145,27 +149,54 @@ function createHill(blockGroup, x, z, obstacles) {
         hillGeometry,
         new THREE.MeshLambertMaterial({ color: hillColor })
     );
-    hill.position.set(x, actualHeight / 2, z);
+    hill.position.set(x, 0, z);
     hill.castShadow = true;
     hill.receiveShadow = true;
     blockGroup.add(hill);
     
-    // Add some details to the hill
-    // Small rocks
-    for (let i = 0; i < 5; i++) {
+    // Add grass texture details to make it more realistic
+    const detailsGroup = new THREE.Group();
+    
+    // Add some details to the hill - grass tufts
+    for (let i = 0; i < 10; i++) {
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * (actualWidth / 2);
-        const rockX = x + Math.cos(angle) * distance;
-        const rockZ = z + Math.sin(angle) * distance;
-        const rockHeight = Math.random() * actualHeight;
+        const tuftX = Math.cos(angle) * distance;
+        const tuftZ = Math.sin(angle) * distance;
+        // Calculate Y based on sphere equation to place tuft on surface
+        const tuftY = Math.sqrt(Math.pow(actualWidth/2, 2) - Math.pow(distance, 2));
+        
+        const grassTuft = new THREE.Mesh(
+            new THREE.ConeGeometry(0.2, 0.4, 4),
+            new THREE.MeshLambertMaterial({ color: 0x33AA33 })
+        );
+        grassTuft.position.set(tuftX, tuftY, tuftZ);
+        // Tilt the grass tuft to follow hill curvature
+        grassTuft.lookAt(x, actualWidth, z);
+        grassTuft.rotateX(Math.PI / 2);
+        detailsGroup.add(grassTuft);
+    }
+    
+    // Add some small rocks
+    for (let i = 0; i < 4; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * (actualWidth / 2);
+        const rockX = Math.cos(angle) * distance;
+        const rockZ = Math.sin(angle) * distance;
+        // Calculate Y based on sphere equation to place rock on surface
+        const rockY = Math.sqrt(Math.pow(actualWidth/2, 2) - Math.pow(distance, 2));
         
         const rock = new THREE.Mesh(
-            new THREE.DodecahedronGeometry(0.2 + Math.random() * 0.3, 0),
+            new THREE.DodecahedronGeometry(0.1 + Math.random() * 0.15, 0),
             new THREE.MeshLambertMaterial({ color: 0x888888 })
         );
-        rock.position.set(rockX, rockHeight * 0.7, rockZ);
-        blockGroup.add(rock);
+        rock.position.set(rockX, rockY - 0.05, rockZ);
+        detailsGroup.add(rock);
     }
+    
+    // Position the details group at the same location as the hill
+    detailsGroup.position.set(x, 0, z);
+    blockGroup.add(detailsGroup);
     
     // Register hill for collision and jumping
     obstacles.push({

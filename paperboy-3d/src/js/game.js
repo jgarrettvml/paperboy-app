@@ -208,20 +208,12 @@ export class Game {
     }
     
     /**
-     * Check if player is on a hill
+     * Check if player is on a hill (deprecated, now handled by checkObstacleCollisions)
      * @returns {boolean} Whether player is on a hill
      */
     isPlayerOnHill() {
-        for (const obstacle of this.obstacles) {
-            if (obstacle.type === 'hill') {
-                const dx = Math.abs(this.player.position.x - obstacle.position.x);
-                const dz = Math.abs(this.player.position.z - obstacle.position.z);
-                
-                if (dx < obstacle.width / 2 && dz < obstacle.depth / 2) {
-                    return true;
-                }
-            }
-        }
+        // This is kept for backwards compatibility but is no longer needed
+        // as hill detection is now handled in checkObstacleCollisions
         return false;
     }
     
@@ -233,28 +225,47 @@ export class Game {
         if (this.player.isInvincible) return false;
         
         for (const obstacle of this.obstacles) {
-            if (obstacle.type === 'hill') continue; // Hills are not obstacles
-            
             const dx = Math.abs(this.player.position.x - obstacle.position.x);
             const dz = Math.abs(this.player.position.z - obstacle.position.z);
+            const collisionWidthFactor = 0.7; // Adjusts collision width for better gameplay
             
-            if (dx < (this.player.width / 2 + obstacle.width / 2) * 0.7 &&
-                dz < (this.player.depth / 2 + obstacle.depth / 2) * 0.7) {
-                
-                // Collision detected
-                this.score -= 5;
-                this.lives--;
-                this.ui.update();
-                
-                // Make player invincible for a short time
-                this.player.makeInvincible();
-                
-                // Check game over
-                if (this.lives <= 0) {
-                    this.endGame();
+            // For hills, use a wider collision area and trigger automatic jump
+            if (obstacle.type === 'hill') {
+                if (dx < (this.player.width / 2 + obstacle.width / 2) * 0.8 &&
+                    dz < (this.player.depth / 2 + obstacle.depth / 2) * 0.8) {
+                    
+                    // Only start jump if not already jumping and can jump
+                    if (!this.player.isJumping && this.player.canJump) {
+                        console.log("Auto-jumping hill!");
+                        this.player.startJump();
+                        // Award points for jumping hills
+                        this.score += 20;
+                        this.ui.update();
+                    }
+                    
+                    // Don't count hills as regular collision obstacles
+                    continue;
                 }
-                
-                return true;
+            } else {
+                // Standard collision detection for other obstacles
+                if (dx < (this.player.width / 2 + obstacle.width / 2) * collisionWidthFactor &&
+                    dz < (this.player.depth / 2 + obstacle.depth / 2) * collisionWidthFactor) {
+                    
+                    // Collision detected
+                    this.score -= 5;
+                    this.lives--;
+                    this.ui.update();
+                    
+                    // Make player invincible for a short time
+                    this.player.makeInvincible();
+                    
+                    // Check game over
+                    if (this.lives <= 0) {
+                        this.endGame();
+                    }
+                    
+                    return true;
+                }
             }
         }
         return false;

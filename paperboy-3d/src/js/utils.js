@@ -6,7 +6,7 @@
 export const COLORS = {
     STREET: 0x888888,
     SIDEWALK: 0xcccccc,
-    GRASS: 0x33cc33,
+    GRASS: 0x228822,
     HOUSE_WALL: 0x666666,
     HOUSE_ROOF: 0x333333,
     PORCH: 0xffffff,
