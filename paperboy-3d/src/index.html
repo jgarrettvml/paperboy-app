@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paperboy 3D</title>
+    <link rel="stylesheet" href="./styles/main.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-container">
+            <div>SCORE: <span id="score">0</span></div>
+            <div>PAPERS: <span id="papers">20</span></div>
+            <div>LIVES: <span id="lives">3</span></div>
+        </div>
+        <div id="instructions">
+            <p>Arrow keys or WASD to move</p>
+            <p>Space bar to throw paper</p>
+            <p>Deliver to mailboxes (20 pts) or porches (10 pts)</p>
+            <p>Avoid obstacles (-5 pts)</p>
+            <p>Jump hills in parks for bonus points (+20 pts)</p>
+        </div>
+        <div id="start-screen">
+            <h1>PAPERBOY 3D</h1>
+            <p>Deliver newspapers to houses and avoid obstacles!</p>
+            <button id="start-button">START GAME</button>
+        </div>
+        <div id="game-over">
+            <h2>GAME OVER</h2>
+            <div>FINAL SCORE: <span id="final-score">0</span></div>
+            <button id="restart-button">PLAY AGAIN</button>
+        </div>
+    </div>
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
